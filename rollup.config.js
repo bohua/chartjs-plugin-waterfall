@@ -1,27 +1,38 @@
 import babel from 'rollup-plugin-babel';
 import eslint from 'rollup-plugin-eslint';
 import uglify from 'rollup-plugin-uglify';
+import merge from 'lodash.merge';
 
-const umdDist = {
-  entry: 'src/index.js',
-  dest: 'dist/chartjs-plugin-waterfall.js',
+const common = {
+  input: 'src/index.js',
   name: 'chartjsWPluginWaterfall',
-  format: 'umd',
-  sourceMap: true,
+  output: {
+    format: 'umd',
+  },
+  sourcemap: true,
+  external: ['lodash.merge', 'lodash.groupby'],
+  globals: {
+    'lodash.merge': '_.merge',
+    'lodash.groupby': '_.groupby',
+  },
+};
+
+const umdDist = merge({}, common, {
+  output: {
+    file: 'dist/chartjs-plugin-waterfall.js',
+  },
   plugins: [
     eslint(),
     babel({
       exclude: 'node_modules/**',
     }),
   ],
-};
+});
 
-const minUmdDist = {
-  entry: 'src/index.js',
-  dest: 'dist/chartjs-plugin-waterfall.min.js',
-  name: 'chartjsWPluginWaterfall',
-  format: 'umd',
-  sourceMap: true,
+const minUmdDist = merge({}, common, {
+  output: {
+    file: 'dist/chartjs-plugin-waterfall.min.js',
+  },
   plugins: [
     eslint(),
     babel({
@@ -29,6 +40,6 @@ const minUmdDist = {
     }),
     uglify(),
   ],
-};
+});
 
 export default [umdDist, minUmdDist];

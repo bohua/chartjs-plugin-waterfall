@@ -13,9 +13,6 @@
     "mocha": true,
     "es6": true
   },
-  "ecmaFeatures": {
-    "modules": true
-  },
   "rules":{
     "no-param-reassign": "off",
     "no-underscore-dangle": "off"

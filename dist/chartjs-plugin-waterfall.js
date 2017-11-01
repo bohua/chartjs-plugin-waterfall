@@ -1,11 +1,14 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(global.chartjsWPluginWaterfall = factory());
-}(this, (function () { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('lodash.merge'), require('lodash.groupby')) :
+	typeof define === 'function' && define.amd ? define(['lodash.merge', 'lodash.groupby'], factory) :
+	(global.chartjsWPluginWaterfall = factory(global._.merge,global._.groupby));
+}(this, (function (merge,groupBy) { 'use strict';
+
+merge = merge && merge.hasOwnProperty('default') ? merge['default'] : merge;
+groupBy = groupBy && groupBy.hasOwnProperty('default') ? groupBy['default'] : groupBy;
 
 var drawStepLines = (function (context, datasets, options) {
-  var stackedDatasets = _.groupBy(datasets, 'stack');
+  var stackedDatasets = groupBy(datasets, 'stack');
   var newDatasets = [];
   var getModel = function getModel(dataset) {
     return dataset._meta[0].data[0]._model;
@@ -63,21 +66,43 @@ var drawStepLines = (function (context, datasets, options) {
   }
 });
 
+var defaultOptions = {
+  waterFallPlugin: {
+    stepLines: {
+      enabled: true,
+      startColorStop: 0,
+      endColorStop: 0.6,
+      startColor: 'rgba(0, 0, 0, 0.55)', // opaque
+      endColor: 'rgba(0, 0, 0, 0)' // transparent
+    }
+  }
+};
+
+var filterDummyStacks = function filterDummyStacks(legendItem, chartData) {
+  var currentDataset = chartData.datasets[legendItem.datasetIndex];
+
+  return !currentDataset.dummyStack;
+};
+
 var waterFallPlugin = {
-  beforeInit: function beforeInit(chart) {
+  afterInit: function afterInit(chart) {
+    chart.options.tooltips.filter = filterDummyStacks;
+    chart.options.legend.labels.filter = filterDummyStacks;
+    chart.options.plugins = merge({}, defaultOptions, chart.options.plugins);
     chart.data.datasets.forEach(function (dataset, i) {
       // Each dataset must have a unique label so we set the dummy stacks to have dummy labels
-      dataset.label = !dataset.label ? 'dummyStack_' + i : dataset.label;
-      dataset.backgroundColor = dataset.dummyStack ? 'rgba(0, 0, 0, 0)' : dataset.backgroundColor;
+      if (dataset.dummyStack) {
+        dataset.label = 'dummyStack_' + i;
+        dataset.backgroundColor = 'rgba(0, 0, 0, 0)';
+      }
     });
   },
   afterDraw: function afterDraw(chart) {
     var options = chart.options.plugins.waterFallPlugin;
+
     if (options.stepLines.enabled) {
       drawStepLines(chart.ctx, chart.data.datasets, options.stepLines);
     }
-
-    chart.update();
   }
 };
 
