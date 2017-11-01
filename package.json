@@ -1,13 +1,13 @@
 {
   "name": "chartjs-plugin-waterfall",
   "homepage": "http://www.chartjs.org",
-  "description": "Chart.js plugin to enable waterfall charts",
+  "description": "Chart.js plugin for easy waterfall charts",
   "version": "0.0.0",
   "license": "MIT",
   "main": "lib/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/chartjs/chartjs-plugin-deferred.git"
+    "url": "https://github.com/MartinDawson/chartjs-plugin-waterfall"
   },
   "files": [
     "dist",
