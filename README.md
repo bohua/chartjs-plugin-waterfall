@@ -85,9 +85,13 @@ options: {
 ```
 
 `stepLines.enabled`: (boolean) If true then it shows the step-lines going from one bar to another.
+
 `stepLines.startColorStop`: (number) Used as the offset value in the first [`addColorStop`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop) method call.
+
 `stepLines.startColor`: (string) Used as the color value in the first [`addColorStop`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop) method call.
+
 `stepLines.endColorStop`: (number) Used as the offset value in the second [`addColorStop`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop) method call.
+
 `stepLines.endColor`: (string) Used as the color value in the second [`addColorStop`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop) method call.
 
 ### Caveats
