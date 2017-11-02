@@ -2,9 +2,9 @@
   "name": "chartjs-plugin-waterfall",
   "homepage": "http://www.chartjs.org",
   "description": "Chart.js plugin for easy waterfall charts",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
-  "main": "lib/index.js",
+  "main": "lib/chartjs-plugin-waterfall.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/MartinDawson/chartjs-plugin-waterfall"
@@ -14,9 +14,9 @@
     "lib"
   ],
   "scripts": {
-    "dist": "rimraf dist && rollup -c",
-    "lib": "rimraf lib && babel src --out-dir lib",
-    "build": "npm-run-all lib dist",
+    "bundle": "rollup -c",
+    "clean": "rimraf lib && rimraf dist",
+    "build": "npm-run-all clean bundle",
     "version": "npm run build && git add -A dist"
   },
   "engines": {

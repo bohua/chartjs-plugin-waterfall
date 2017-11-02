@@ -6,9 +6,6 @@ import merge from 'lodash.merge';
 const common = {
   input: 'src/index.js',
   name: 'chartjsWPluginWaterfall',
-  output: {
-    format: 'umd',
-  },
   sourcemap: true,
   external: ['lodash.merge', 'lodash.groupby'],
   globals: {
@@ -17,29 +14,42 @@ const common = {
   },
 };
 
+const babelOptions = {
+  exclude: 'node_modules/**',
+};
+
+const lib = merge({}, common, {
+  output: {
+    format: 'cjs',
+    file: 'lib/chartjs-plugin-waterfall.js',
+  },
+  plugins: [
+    eslint(),
+    babel(babelOptions),
+  ],
+});
+
 const umdDist = merge({}, common, {
   output: {
+    format: 'umd',
     file: 'dist/chartjs-plugin-waterfall.js',
   },
   plugins: [
     eslint(),
-    babel({
-      exclude: 'node_modules/**',
-    }),
+    babel(babelOptions),
   ],
 });
 
 const minUmdDist = merge({}, common, {
   output: {
+    format: 'umd',
     file: 'dist/chartjs-plugin-waterfall.min.js',
   },
   plugins: [
     eslint(),
-    babel({
-      exclude: 'node_modules/**',
-    }),
+    babel(babelOptions),
     uglify(),
   ],
 });
 
-export default [umdDist, minUmdDist];
+export default [lib, umdDist, minUmdDist];
