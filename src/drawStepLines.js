@@ -3,7 +3,11 @@ import groupBy from 'lodash.groupby';
 export default (context, datasets, options) => {
   const stackedDatasets = groupBy(datasets, 'stack');
   const newDatasets = [];
-  const getModel = dataset => dataset._meta[0].data[0]._model;
+  const getModel = (dataset) => {
+    const firstKey = Object.keys(dataset._meta)[0];
+
+    return dataset._meta[firstKey].data[0]._model;
+  };
 
   Object.keys(stackedDatasets).forEach((key) => {
     const currentStackedDataset = stackedDatasets[key];
