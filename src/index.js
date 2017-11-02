@@ -11,6 +11,9 @@ const defaultOptions = {
       startColor: 'rgba(0, 0, 0, 0.55)', // opaque
       endColor: 'rgba(0, 0, 0, 0)', // transparent
     },
+    _status: {
+      readyToDrawStepLines: false,
+    },
   },
 };
 
@@ -21,10 +24,21 @@ const filterDummyStacks = (legendItem, chartData) => {
 };
 
 const waterFallPlugin = {
+  afterRender: (chart) => {
+    const onComplete = chart.options.animation.onComplete;
+
+    chart.options.animation.onComplete = (...args) => {
+      chart.options.plugins.waterFallPlugin._status.readyToDrawStepLines = true;
+
+      drawStepLines(chart);
+      onComplete(...args);
+    };
+  },
   afterInit: (chart) => {
+    chart.options.plugins = merge({}, defaultOptions, chart.options.plugins);
     chart.options.tooltips.filter = filterDummyStacks;
     chart.options.legend.labels.filter = filterDummyStacks;
-    chart.options.plugins = merge({}, defaultOptions, chart.options.plugins);
+
     chart.data.datasets.forEach((dataset, i) => {
       // Each dataset must have a unique label so we set the dummy stacks to have dummy labels
       if (dataset.dummyStack) {
@@ -36,8 +50,9 @@ const waterFallPlugin = {
   afterDraw: (chart) => {
     const options = chart.options.plugins.waterFallPlugin;
 
-    if (options.stepLines.enabled) {
-      drawStepLines(chart.ctx, chart.data.datasets, options.stepLines);
+    if (options.stepLines.enabled &&
+        options._status.readyToDrawStepLines) {
+      drawStepLines(chart);
     }
   },
 };

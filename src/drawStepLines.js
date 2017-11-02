@@ -1,6 +1,9 @@
 import groupBy from 'lodash.groupby';
 
-export default (context, datasets, options) => {
+export default (chart) => {
+  const context = chart.ctx;
+  const datasets = chart.data.datasets;
+  const options = chart.options.plugins.waterFallPlugin.stepLines;
   const stackedDatasets = groupBy(datasets, 'stack');
   const newDatasets = [];
   const getModel = (dataset) => {
