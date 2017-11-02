@@ -7,7 +7,10 @@
 merge = merge && merge.hasOwnProperty('default') ? merge['default'] : merge;
 groupBy = groupBy && groupBy.hasOwnProperty('default') ? groupBy['default'] : groupBy;
 
-var drawStepLines = (function (context, datasets, options) {
+var drawStepLines = (function (chart) {
+  var context = chart.ctx;
+  var datasets = chart.data.datasets;
+  var options = chart.options.plugins.waterFallPlugin.stepLines;
   var stackedDatasets = groupBy(datasets, 'stack');
   var newDatasets = [];
   var getModel = function getModel(dataset) {
@@ -76,6 +79,9 @@ var defaultOptions = {
       endColorStop: 0.6,
       startColor: 'rgba(0, 0, 0, 0.55)', // opaque
       endColor: 'rgba(0, 0, 0, 0)' // transparent
+    },
+    _status: {
+      readyToDrawStepLines: false
     }
   }
 };
@@ -87,10 +93,21 @@ var filterDummyStacks = function filterDummyStacks(legendItem, chartData) {
 };
 
 var waterFallPlugin = {
+  afterRender: function afterRender(chart) {
+    var onComplete = chart.options.animation.onComplete;
+
+    chart.options.animation.onComplete = function () {
+      chart.options.plugins.waterFallPlugin._status.readyToDrawStepLines = true;
+
+      drawStepLines(chart);
+      onComplete.apply(undefined, arguments);
+    };
+  },
   afterInit: function afterInit(chart) {
+    chart.options.plugins = merge({}, defaultOptions, chart.options.plugins);
     chart.options.tooltips.filter = filterDummyStacks;
     chart.options.legend.labels.filter = filterDummyStacks;
-    chart.options.plugins = merge({}, defaultOptions, chart.options.plugins);
+
     chart.data.datasets.forEach(function (dataset, i) {
       // Each dataset must have a unique label so we set the dummy stacks to have dummy labels
       if (dataset.dummyStack) {
@@ -102,8 +119,8 @@ var waterFallPlugin = {
   afterDraw: function afterDraw(chart) {
     var options = chart.options.plugins.waterFallPlugin;
 
-    if (options.stepLines.enabled) {
-      drawStepLines(chart.ctx, chart.data.datasets, options.stepLines);
+    if (options.stepLines.enabled && options._status.readyToDrawStepLines) {
+      drawStepLines(chart);
     }
   }
 };
