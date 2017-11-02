@@ -11,7 +11,9 @@ var drawStepLines = (function (context, datasets, options) {
   var stackedDatasets = groupBy(datasets, 'stack');
   var newDatasets = [];
   var getModel = function getModel(dataset) {
-    return dataset._meta[0].data[0]._model;
+    var firstKey = Object.keys(dataset._meta)[0];
+
+    return dataset._meta[firstKey].data[0]._model;
   };
 
   Object.keys(stackedDatasets).forEach(function (key) {
