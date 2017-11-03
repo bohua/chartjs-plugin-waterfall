@@ -79,12 +79,11 @@ var defaultOptions = {
       endColorStop: 0.6,
       startColor: 'rgba(0, 0, 0, 0.55)', // opaque
       endColor: 'rgba(0, 0, 0, 0)' // transparent
-    },
-    _status: {
-      readyToDrawStepLines: false
     }
   }
 };
+
+var status = {};
 
 var filterDummyStacks = function filterDummyStacks(legendItem, chartData) {
   var currentDataset = chartData.datasets[legendItem.datasetIndex];
@@ -93,20 +92,22 @@ var filterDummyStacks = function filterDummyStacks(legendItem, chartData) {
 };
 
 var waterFallPlugin = {
-  afterRender: function afterRender(chart) {
-    var onComplete = chart.options.animation.onComplete;
-
-    chart.options.animation.onComplete = function () {
-      chart.options.plugins.waterFallPlugin._status.readyToDrawStepLines = true;
-
-      drawStepLines(chart);
-      onComplete.apply(undefined, arguments);
+  beforeInit: function beforeInit(chart) {
+    status[chart.id] = {
+      readyToDrawStepLines: false
     };
   },
   afterInit: function afterInit(chart) {
     chart.options.plugins = merge({}, defaultOptions, chart.options.plugins);
     chart.options.tooltips.filter = filterDummyStacks;
     chart.options.legend.labels.filter = filterDummyStacks;
+
+    // Can't override onComplete function because it gets overwridden if user using React
+    setTimeout(function () {
+      status[chart.id].readyToDrawStepLines = true;
+
+      drawStepLines(chart);
+    }, chart.options.animation.duration);
 
     chart.data.datasets.forEach(function (dataset, i) {
       // Each dataset must have a unique label so we set the dummy stacks to have dummy labels
@@ -119,7 +120,7 @@ var waterFallPlugin = {
   afterDraw: function afterDraw(chart) {
     var options = chart.options.plugins.waterFallPlugin;
 
-    if (options.stepLines.enabled && options._status.readyToDrawStepLines) {
+    if (options.stepLines.enabled && status[chart.id].readyToDrawStepLines) {
       drawStepLines(chart);
     }
   }
