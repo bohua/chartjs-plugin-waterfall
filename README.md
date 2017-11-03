@@ -99,7 +99,7 @@ options: {
 If they don't the step lines going from one bar to the next will not be horizontal.
 
 - The invisible dummy stacks are removed from the [tooltip](http://www.chartjs.org/docs/latest/configuration/tooltip.html#filter-callback) 
-and [legend](http://www.chartjs.org/docs/latest/configuration/legend.html#legend-label-configuration) by default using the `filter` mehthod. 
+and [legend](http://www.chartjs.org/docs/latest/configuration/legend.html#legend-label-configuration) by default using the `filter` method. 
 If you are providing your own filter method, using a custom tooltip or legend of your own then you will have to manually hide them because it will overwrite this plugins.
 
 E.g. This is how this plugin hides them, so you could do it this way:
