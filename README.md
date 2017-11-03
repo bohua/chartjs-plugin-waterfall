@@ -94,9 +94,6 @@ options: {
 
 `stepLines.endColor`: (string) Used as the color value in the second [`addColorStop`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop) method call.
 
-### Internals
-This plugin uses a `_status` property on the `options.plugins.waterFallPlugin` to track when to draw the stepLines after any animations complete. Don't overwrite this.
-
 ### Caveats
 - This plugin presumes that each of yours bars in your chart match up either at the top or the bottom of each bar.
 If they don't the step lines going from one bar to the next will not be horizontal.

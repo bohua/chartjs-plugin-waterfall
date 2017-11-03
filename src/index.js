@@ -11,11 +11,10 @@ const defaultOptions = {
       startColor: 'rgba(0, 0, 0, 0.55)', // opaque
       endColor: 'rgba(0, 0, 0, 0)', // transparent
     },
-    _status: {
-      readyToDrawStepLines: false,
-    },
   },
 };
+
+const status = {};
 
 const filterDummyStacks = (legendItem, chartData) => {
   const currentDataset = chartData.datasets[legendItem.datasetIndex];
@@ -24,20 +23,23 @@ const filterDummyStacks = (legendItem, chartData) => {
 };
 
 const waterFallPlugin = {
-  afterRender: (chart) => {
-    const onComplete = chart.options.animation.onComplete;
-
-    chart.options.animation.onComplete = (...args) => {
-      chart.options.plugins.waterFallPlugin._status.readyToDrawStepLines = true;
-
-      drawStepLines(chart);
-      onComplete(...args);
+  beforeInit: (chart) => {
+    status[chart.id] = {
+      readyToDrawStepLines: false,
     };
   },
   afterInit: (chart) => {
     chart.options.plugins = merge({}, defaultOptions, chart.options.plugins);
     chart.options.tooltips.filter = filterDummyStacks;
     chart.options.legend.labels.filter = filterDummyStacks;
+
+    // Can't override onComplete function because it gets overwridden if user using React
+    setTimeout(() => {
+      status[chart.id].readyToDrawStepLines = true;
+
+      drawStepLines(chart);
+    }, chart.options.animation.duration);
+
 
     chart.data.datasets.forEach((dataset, i) => {
       // Each dataset must have a unique label so we set the dummy stacks to have dummy labels
@@ -51,7 +53,7 @@ const waterFallPlugin = {
     const options = chart.options.plugins.waterFallPlugin;
 
     if (options.stepLines.enabled &&
-        options._status.readyToDrawStepLines) {
+        status[chart.id].readyToDrawStepLines) {
       drawStepLines(chart);
     }
   },
