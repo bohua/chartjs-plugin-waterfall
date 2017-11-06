@@ -10,6 +10,7 @@ const defaultOptions = {
       endColorStop: 0.6,
       startColor: 'rgba(0, 0, 0, 0.55)', // opaque
       endColor: 'rgba(0, 0, 0, 0)', // transparent
+      diagonalStepLines: true,
     },
   },
 };
