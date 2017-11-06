@@ -7,6 +7,30 @@
 merge = merge && merge.hasOwnProperty('default') ? merge['default'] : merge;
 groupBy = groupBy && groupBy.hasOwnProperty('default') ? groupBy['default'] : groupBy;
 
+var drawOnCanvas = function drawOnCanvas(context, options, firstDataPoints, secondDataPoints, useFakeBase) {
+  var firstStackBase = useFakeBase ? firstDataPoints.stackFakeBase : firstDataPoints.stackBase;
+  var secondStackBase = useFakeBase ? secondDataPoints.stackFakeBase : secondDataPoints.stackBase;
+
+  // Gradient from top of second box to bottom of both boxes
+  var gradient = context.createLinearGradient(0, secondDataPoints.stackTopYPos, 0, secondStackBase);
+
+  gradient.addColorStop(options.startColorStop, options.startColor);
+  gradient.addColorStop(options.endColorStop, options.endColor);
+
+  context.fillStyle = gradient;
+
+  context.beginPath();
+  // top right of first box
+  context.lineTo(firstDataPoints.stackRightXPos, firstDataPoints.stackTopYPos);
+  // top left of second box
+  context.lineTo(secondDataPoints.stackLeftXPos, secondDataPoints.stackTopYPos);
+  // bottom left of second box
+  context.lineTo(secondDataPoints.stackLeftXPos, secondStackBase);
+  // bottom right of first box
+  context.lineTo(firstDataPoints.stackRightXPos, firstStackBase);
+  context.fill();
+};
+
 var drawStepLines = (function (chart) {
   var context = chart.ctx;
   var datasets = chart.data.datasets;
@@ -19,55 +43,90 @@ var drawStepLines = (function (chart) {
     return dataset._meta[firstKey].data[0]._model;
   };
 
+  var getNewDataPoints = function getNewDataPoints(existingDataset) {
+    var newDataPoints = [];
+    var stackBase = null;
+
+    existingDataset.forEach(function (dataset, i) {
+      var model = getModel(dataset);
+
+      if (i === 0) {
+        stackBase = model.base;
+      }
+
+      newDataPoints.push({
+        stackRightXPos: model.x + model.width / 2,
+        stackLeftXPos: model.x - model.width / 2,
+        stackTopYPos: model.y,
+        stackBase: stackBase
+      });
+    });
+
+    return newDataPoints;
+  };
+
   Object.keys(stackedDatasets).forEach(function (key) {
     var currentStackedDataset = stackedDatasets[key];
-    var firstRealModel = getModel(currentStackedDataset.find(function (x) {
+    var realStackedDataset = currentStackedDataset.filter(function (x) {
       return !x.dummyStack;
-    }));
-    var firstModel = getModel(currentStackedDataset[0]);
-    var lastModel = getModel(currentStackedDataset[currentStackedDataset.length - 1]);
+    });
 
     newDatasets.push({
-      stackRightXPos: firstModel.x + firstModel.width / 2,
-      stackLeftXPos: firstModel.x - firstModel.width / 2,
-      stackRealBottomYPos: firstRealModel.base,
-      stackBottomYPos: firstModel.base,
-      stackTopYPos: lastModel.y
+      allDataPoints: getNewDataPoints(currentStackedDataset),
+      allRealDataPoints: getNewDataPoints(realStackedDataset)
     });
   });
 
-  for (var i = 0; i < newDatasets.length; i += 1) {
+  var getFirstDataPointValues = function getFirstDataPointValues(dataset) {
+    return {
+      stackRightXPos: dataset.allRealDataPoints[0].stackRightXPos,
+      stackLeftXPos: dataset.allRealDataPoints[0].stackLeftXPos,
+      stackTopYPos: dataset.allRealDataPoints[dataset.allRealDataPoints.length - 1].stackTopYPos,
+      stackBase: dataset.allRealDataPoints[0].stackBase,
+      stackFakeBase: dataset.allDataPoints[0].stackBase
+    };
+  };
+
+  var stacksYPosOrBaseAreEqual = function stacksYPosOrBaseAreEqual(firstDataPoints, secondDataPoints) {
+    return firstDataPoints.stackTopYPos === secondDataPoints.stackTopYPos && firstDataPoints.stackFakeBase === secondDataPoints.stackFakeBase;
+  };
+
+  var _loop = function _loop(i) {
     var firstDataSet = newDatasets[i];
 
     if (i !== newDatasets.length - 1) {
       var secondDataSet = newDatasets[i + 1];
+      var firstDataPoints = getFirstDataPointValues(firstDataSet);
+      var secondDataPoints = getFirstDataPointValues(secondDataSet);
 
       // Needed to convert step lines to look like bars when we have floating stacks
-      if (firstDataSet.stackTopYPos === secondDataSet.stackRealBottomYPos) {
-        secondDataSet.stackTopYPos = secondDataSet.stackRealBottomYPos;
-      } else if (firstDataSet.stackRealBottomYPos === secondDataSet.stackTopYPos) {
-        firstDataSet.stackTopYPos = firstDataSet.stackRealBottomYPos;
+      if (firstDataPoints.stackTopYPos === secondDataPoints.stackBase) {
+        secondDataPoints.stackTopYPos = secondDataPoints.stackBase;
+      } else if (firstDataPoints.stackBase === secondDataPoints.stackTopYPos) {
+        firstDataPoints.stackTopYPos = firstDataPoints.stackBase;
       }
 
-      // Gradient from top of second box to bottom of both boxes
-      var gradient = context.createLinearGradient(0, secondDataSet.stackTopYPos, 0, secondDataSet.stackBottomYPos);
+      if (options.diagonalStepLines || stacksYPosOrBaseAreEqual(firstDataPoints, secondDataPoints)) {
+        drawOnCanvas(context, options, firstDataPoints, secondDataPoints, true);
+      }
 
-      gradient.addColorStop(options.startColorStop, options.startColor);
-      gradient.addColorStop(options.endColorStop, options.endColor);
+      if (Array.isArray(options.diagonalStepLines)) {
+        options.diagonalStepLines.forEach(function (dataPointArray) {
+          var firstDataPointIndex = dataPointArray[0];
+          var secondDataPointIndex = dataPointArray[1];
+          var firstDiagonalDataPoints = firstDataSet.allRealDataPoints[firstDataPointIndex];
+          var secondDiagonalDataPoints = secondDataSet.allRealDataPoints[secondDataPointIndex];
 
-      context.fillStyle = gradient;
-
-      context.beginPath();
-      // top right of first box
-      context.lineTo(firstDataSet.stackRightXPos, firstDataSet.stackTopYPos);
-      // top left of second box
-      context.lineTo(secondDataSet.stackLeftXPos, secondDataSet.stackTopYPos);
-      // bottom left of second box
-      context.lineTo(secondDataSet.stackLeftXPos, secondDataSet.stackBottomYPos);
-      // bottom right of first box
-      context.lineTo(firstDataSet.stackRightXPos, firstDataSet.stackBottomYPos);
-      context.fill();
+          if (firstDiagonalDataPoints && secondDiagonalDataPoints) {
+            drawOnCanvas(context, options, firstDiagonalDataPoints, secondDiagonalDataPoints);
+          }
+        });
+      }
     }
+  };
+
+  for (var i = 0; i < newDatasets.length; i += 1) {
+    _loop(i);
   }
 });
 
@@ -78,7 +137,8 @@ var defaultOptions = {
       startColorStop: 0,
       endColorStop: 0.6,
       startColor: 'rgba(0, 0, 0, 0.55)', // opaque
-      endColor: 'rgba(0, 0, 0, 0)' // transparent
+      endColor: 'rgba(0, 0, 0, 0)', // transparent
+      diagonalStepLines: true
     }
   }
 };
