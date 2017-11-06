@@ -2,7 +2,7 @@
 `npm install --save chartjs-plugin-waterfall`
 
 Here's what it looks like:
-![WaterFall chart](https://user-images.githubusercontent.com/15030491/32284115-7cb464e6-bf26-11e7-8bcc-67ba8c6fe09d.png)
+![WaterFall Chart Example](https://user-images.githubusercontent.com/15030491/32444814-28cd3f9c-c304-11e7-9e26-c52e5ec0d25e.png)
 
 ### Usage
 Just import the plugin and add it to any chart that you want to be a waterfall chart like so:
