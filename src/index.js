@@ -20,7 +20,7 @@ const status = {};
 const filterDummyStacks = (legendItem, chartData) => {
   const currentDataset = chartData.datasets[legendItem.datasetIndex];
 
-  return !currentDataset.dummyStack;
+  return !currentDataset.waterfall.dummyStack;
 };
 
 const waterFallPlugin = {
@@ -43,8 +43,12 @@ const waterFallPlugin = {
 
 
     chart.data.datasets.forEach((dataset, i) => {
+      dataset.waterfall = merge({}, {
+        stepLines: {},
+      }, dataset.waterfall);
+
       // Each dataset must have a unique label so we set the dummy stacks to have dummy labels
-      if (dataset.dummyStack) {
+      if (dataset.waterfall.dummyStack) {
         dataset.label = `dummyStack_${i}`;
         dataset.backgroundColor = 'rgba(0, 0, 0, 0)';
       }
