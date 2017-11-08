@@ -7,27 +7,245 @@
 merge = merge && merge.hasOwnProperty('default') ? merge['default'] : merge;
 groupBy = groupBy && groupBy.hasOwnProperty('default') ? groupBy['default'] : groupBy;
 
-var drawOnCanvas = function drawOnCanvas(context, options, firstDataPoints, secondDataPoints, useFakeBase) {
-  var firstStackBase = useFakeBase ? firstDataPoints.stackFakeBase : firstDataPoints.stackBase;
-  var secondStackBase = useFakeBase ? secondDataPoints.stackFakeBase : secondDataPoints.stackBase;
+var asyncGenerator = function () {
+  function AwaitValue(value) {
+    this.value = value;
+  }
+
+  function AsyncGenerator(gen) {
+    var front, back;
+
+    function send(key, arg) {
+      return new Promise(function (resolve, reject) {
+        var request = {
+          key: key,
+          arg: arg,
+          resolve: resolve,
+          reject: reject,
+          next: null
+        };
+
+        if (back) {
+          back = back.next = request;
+        } else {
+          front = back = request;
+          resume(key, arg);
+        }
+      });
+    }
+
+    function resume(key, arg) {
+      try {
+        var result = gen[key](arg);
+        var value = result.value;
+
+        if (value instanceof AwaitValue) {
+          Promise.resolve(value.value).then(function (arg) {
+            resume("next", arg);
+          }, function (arg) {
+            resume("throw", arg);
+          });
+        } else {
+          settle(result.done ? "return" : "normal", result.value);
+        }
+      } catch (err) {
+        settle("throw", err);
+      }
+    }
+
+    function settle(type, value) {
+      switch (type) {
+        case "return":
+          front.resolve({
+            value: value,
+            done: true
+          });
+          break;
+
+        case "throw":
+          front.reject(value);
+          break;
+
+        default:
+          front.resolve({
+            value: value,
+            done: false
+          });
+          break;
+      }
+
+      front = front.next;
+
+      if (front) {
+        resume(front.key, front.arg);
+      } else {
+        back = null;
+      }
+    }
+
+    this._invoke = send;
+
+    if (typeof gen.return !== "function") {
+      this.return = undefined;
+    }
+  }
+
+  if (typeof Symbol === "function" && Symbol.asyncIterator) {
+    AsyncGenerator.prototype[Symbol.asyncIterator] = function () {
+      return this;
+    };
+  }
+
+  AsyncGenerator.prototype.next = function (arg) {
+    return this._invoke("next", arg);
+  };
+
+  AsyncGenerator.prototype.throw = function (arg) {
+    return this._invoke("throw", arg);
+  };
+
+  AsyncGenerator.prototype.return = function (arg) {
+    return this._invoke("return", arg);
+  };
+
+  return {
+    wrap: function (fn) {
+      return function () {
+        return new AsyncGenerator(fn.apply(this, arguments));
+      };
+    },
+    await: function (value) {
+      return new AwaitValue(value);
+    }
+  };
+}();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var toConsumableArray = function (arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+    return arr2;
+  } else {
+    return Array.from(arr);
+  }
+};
+
+var DEBUG = false;
+
+var drawOnCanvas = function drawOnCanvas(context, options, currentDatapointValues, nextDatapointValues) {
+  var currentStackBase = currentDatapointValues.stackBase;
+  var nextStackBase = nextDatapointValues.stackBase;
+  var currentStackTopYPos = currentDatapointValues.stackTopYPos;
+  var nextStackTopYPos = nextDatapointValues.stackTopYPos;
+
+  /* If the heights match top to bottom or bottom to top then
+  flip the top coordinates to be at the bottom so that a horizontal step line is drawn */
+  if (currentStackTopYPos === nextStackBase) {
+    nextStackTopYPos = nextStackBase;
+    nextStackBase = nextDatapointValues.dummyStackBase;
+  } else if (currentStackBase === nextStackTopYPos) {
+    currentStackTopYPos = currentStackBase;
+    currentStackBase = currentDatapointValues.dummyStackBase;
+  }
+
+  // We need to flip the y co-ords if one of the datasets is negative and the other isn't
+  if (!currentDatapointValues.isPositive && nextDatapointValues.isPositive) {
+    nextStackTopYPos = nextStackBase;
+    nextStackBase = nextDatapointValues.stackTopYPos;
+  }
+
+  if (currentDatapointValues.isPositive && !nextDatapointValues.isPositive) {
+    currentStackTopYPos = currentStackBase;
+    currentStackBase = currentDatapointValues.stackTopYPos;
+  }
+
+  // Draws co-ords on the canvas to allow easier debugging
+  if (DEBUG) {
+    context.font = '9px Arial';
+    context.fillStyle = '#000';
+    context.fillText('TR: ' + currentDatapointValues.stackRightXPos.toFixed(0), currentDatapointValues.stackRightXPos, currentStackTopYPos);
+    context.fillText('TL: ' + nextDatapointValues.stackLeftXPos.toFixed(0), nextDatapointValues.stackLeftXPos, nextStackTopYPos);
+    context.fillText('BL: ' + nextStackBase.toFixed(0), nextDatapointValues.stackLeftXPos, nextStackBase);
+    context.fillText('BR: ' + currentStackBase.toFixed(0), currentDatapointValues.stackRightXPos, currentStackBase);
+  }
+
+  // Makes sure that each step line is consistent
+  var yStart = currentStackTopYPos > nextStackTopYPos ? currentStackTopYPos : nextStackTopYPos;
+  var yEnd = currentStackBase > nextStackBase ? currentStackBase : nextStackBase;
 
   // Gradient from top of second box to bottom of both boxes
-  var gradient = context.createLinearGradient(0, secondDataPoints.stackTopYPos, 0, secondStackBase);
+  var gradient = context.createLinearGradient(0, yStart, 0, yEnd);
 
-  gradient.addColorStop(options.startColorStop, options.startColor);
-  gradient.addColorStop(options.endColorStop, options.endColor);
+  // Dataset options take priority if they are specified
+  var startColor = currentDatapointValues.options.startColor || options.startColor;
+  var endColor = currentDatapointValues.options.endColor || options.endColor;
+  var startColorStop = currentDatapointValues.options.startColorStop || options.startColorStop;
+  var endColorStop = currentDatapointValues.options.endColorStop || options.endColorStop;
+
+  gradient.addColorStop(startColorStop, startColor);
+  gradient.addColorStop(endColorStop, endColor);
 
   context.fillStyle = gradient;
 
   context.beginPath();
+
   // top right of first box
-  context.lineTo(firstDataPoints.stackRightXPos, firstDataPoints.stackTopYPos);
+  context.lineTo(currentDatapointValues.stackRightXPos, currentStackTopYPos);
   // top left of second box
-  context.lineTo(secondDataPoints.stackLeftXPos, secondDataPoints.stackTopYPos);
+  context.lineTo(nextDatapointValues.stackLeftXPos, nextStackTopYPos);
   // bottom left of second box
-  context.lineTo(secondDataPoints.stackLeftXPos, secondStackBase);
+  context.lineTo(nextDatapointValues.stackLeftXPos, nextStackBase);
   // bottom right of first box
-  context.lineTo(firstDataPoints.stackRightXPos, firstStackBase);
+  context.lineTo(currentDatapointValues.stackRightXPos, currentStackBase);
+
   context.fill();
 };
 
@@ -37,88 +255,88 @@ var drawStepLines = (function (chart) {
   var options = chart.options.plugins.waterFallPlugin.stepLines;
   var stackedDatasets = groupBy(datasets, 'stack');
   var newDatasets = [];
+
   var getModel = function getModel(dataset) {
     var firstKey = Object.keys(dataset._meta)[0];
 
     return dataset._meta[firstKey].data[0]._model;
   };
 
-  var getNewDataPoints = function getNewDataPoints(existingDataset) {
-    var newDataPoints = [];
-    var stackBase = null;
+  Object.keys(stackedDatasets).forEach(function (key) {
+    var currentStackedDataset = stackedDatasets[key];
 
-    existingDataset.forEach(function (dataset, i) {
+    var nonDummyStacks = currentStackedDataset.filter(function (dataset) {
+      return !dataset.waterfall.dummyStack;
+    });
+    var bases = nonDummyStacks.map(function (dataset) {
+      return getModel(dataset).base;
+    });
+    var lowestBase = Math.max.apply(Math, toConsumableArray(bases));
+
+    var dummStackBases = currentStackedDataset.map(function (dataset) {
+      return getModel(dataset).base;
+    });
+    var lowestDummyStackBase = Math.max.apply(Math, toConsumableArray(dummStackBases));
+
+    // Loop through each sub stack
+    var properties = currentStackedDataset.map(function (dataset) {
       var model = getModel(dataset);
 
-      if (i === 0) {
-        stackBase = model.base;
-      }
-
-      newDataPoints.push({
+      return {
         stackRightXPos: model.x + model.width / 2,
         stackLeftXPos: model.x - model.width / 2,
         stackTopYPos: model.y,
-        stackBase: stackBase
-      });
+        stackBase: lowestBase,
+        dummyStackBase: lowestDummyStackBase,
+        isPositive: dataset.data[0] > 0,
+        options: dataset.waterfall.stepLines
+      };
     });
 
-    return newDataPoints;
-  };
-
-  Object.keys(stackedDatasets).forEach(function (key) {
-    var currentStackedDataset = stackedDatasets[key];
-    var realStackedDataset = currentStackedDataset.filter(function (x) {
-      return !x.dummyStack;
-    });
-
-    newDatasets.push({
-      allDataPoints: getNewDataPoints(currentStackedDataset),
-      allRealDataPoints: getNewDataPoints(realStackedDataset)
-    });
+    newDatasets.push(properties);
   });
 
-  var getFirstDataPointValues = function getFirstDataPointValues(dataset) {
+  // Gets the values for the steplines at the top of the stack
+  var getDatapointsValues = function getDatapointsValues(dataset) {
+    var index = dataset.length - 1;
+
     return {
-      stackRightXPos: dataset.allRealDataPoints[0].stackRightXPos,
-      stackLeftXPos: dataset.allRealDataPoints[0].stackLeftXPos,
-      stackTopYPos: dataset.allRealDataPoints[dataset.allRealDataPoints.length - 1].stackTopYPos,
-      stackBase: dataset.allRealDataPoints[0].stackBase,
-      stackFakeBase: dataset.allDataPoints[0].stackBase
+      stackRightXPos: dataset[index].stackRightXPos,
+      stackLeftXPos: dataset[index].stackLeftXPos,
+      stackTopYPos: dataset[index].stackTopYPos,
+      stackBase: dataset[index].stackBase,
+      dummyStackBase: dataset[index].dummyStackBase,
+      isPositive: dataset[index].isPositive,
+      options: dataset[index].options
     };
   };
 
-  var stacksYPosOrBaseAreEqual = function stacksYPosOrBaseAreEqual(firstDataPoints, secondDataPoints) {
-    return firstDataPoints.stackTopYPos === secondDataPoints.stackTopYPos && firstDataPoints.stackFakeBase === secondDataPoints.stackFakeBase;
+  var stacksYPosAndBaseAreEqual = function stacksYPosAndBaseAreEqual(currentDatapointValues, nextDatapointValues) {
+    return currentDatapointValues.stackTopYPos === nextDatapointValues.stackTopYPos && currentDatapointValues.stackBase === nextDatapointValues.stackBase;
   };
 
   var _loop = function _loop(i) {
-    var firstDataSet = newDatasets[i];
+    var currentDataSet = newDatasets[i];
 
     if (i !== newDatasets.length - 1) {
-      var secondDataSet = newDatasets[i + 1];
-      var firstDataPoints = getFirstDataPointValues(firstDataSet);
-      var secondDataPoints = getFirstDataPointValues(secondDataSet);
+      var nextDataSet = newDatasets[i + 1];
+      var currentDatapointValues = getDatapointsValues(currentDataSet);
+      var nextDatapointValues = getDatapointsValues(nextDataSet);
 
-      // Needed to convert step lines to look like bars when we have floating stacks
-      if (firstDataPoints.stackTopYPos === secondDataPoints.stackBase) {
-        secondDataPoints.stackTopYPos = secondDataPoints.stackBase;
-      } else if (firstDataPoints.stackBase === secondDataPoints.stackTopYPos) {
-        firstDataPoints.stackTopYPos = firstDataPoints.stackBase;
+      if (options.diagonalStepLines || stacksYPosAndBaseAreEqual(currentDatapointValues, nextDatapointValues)) {
+        drawOnCanvas(context, options, currentDatapointValues, nextDatapointValues);
       }
 
-      if (options.diagonalStepLines || stacksYPosOrBaseAreEqual(firstDataPoints, secondDataPoints)) {
-        drawOnCanvas(context, options, firstDataPoints, secondDataPoints, true);
-      }
-
+      // Custom step lines that can go from each sub-stack to another sub-stack
       if (Array.isArray(options.diagonalStepLines)) {
-        options.diagonalStepLines.forEach(function (dataPointArray) {
-          var firstDataPointIndex = dataPointArray[0];
-          var secondDataPointIndex = dataPointArray[1];
-          var firstDiagonalDataPoints = firstDataSet.allRealDataPoints[firstDataPointIndex];
-          var secondDiagonalDataPoints = secondDataSet.allRealDataPoints[secondDataPointIndex];
+        options.diagonalStepLines.forEach(function (stepLinesIndexArray) {
+          var firstCoordinateIndex = stepLinesIndexArray[0];
+          var secondCoordinateIndex = stepLinesIndexArray[1];
+          var currentDiagonalDatapointValues = currentDataSet[firstCoordinateIndex];
+          var nextDiagonalDatapointValues = nextDataSet[secondCoordinateIndex];
 
-          if (firstDiagonalDataPoints && secondDiagonalDataPoints) {
-            drawOnCanvas(context, options, firstDiagonalDataPoints, secondDiagonalDataPoints);
+          if (currentDiagonalDatapointValues && nextDiagonalDatapointValues) {
+            drawOnCanvas(context, options, currentDiagonalDatapointValues, nextDiagonalDatapointValues);
           }
         });
       }
@@ -148,7 +366,7 @@ var status = {};
 var filterDummyStacks = function filterDummyStacks(legendItem, chartData) {
   var currentDataset = chartData.datasets[legendItem.datasetIndex];
 
-  return !currentDataset.dummyStack;
+  return !currentDataset.waterfall.dummyStack;
 };
 
 var waterFallPlugin = {
@@ -170,8 +388,12 @@ var waterFallPlugin = {
     }, chart.options.animation.duration);
 
     chart.data.datasets.forEach(function (dataset, i) {
+      dataset.waterfall = merge({}, {
+        stepLines: {}
+      }, dataset.waterfall);
+
       // Each dataset must have a unique label so we set the dummy stacks to have dummy labels
-      if (dataset.dummyStack) {
+      if (dataset.waterfall.dummyStack) {
         dataset.label = 'dummyStack_' + i;
         dataset.backgroundColor = 'rgba(0, 0, 0, 0)';
       }
