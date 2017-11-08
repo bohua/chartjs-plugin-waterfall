@@ -15,6 +15,7 @@ const common = {
 };
 
 const babelOptions = {
+  plugins: ['external-helpers'],
   exclude: 'node_modules/**',
 };
 

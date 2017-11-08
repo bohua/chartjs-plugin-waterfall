@@ -123,6 +123,7 @@ Global/Chart/Dataset options:
 `stepLines.endColor`: (string) Used as the color value in the second [`addColorStop`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop) method call.
 
 ### Caveats
+- Multiple values in `data` currently are not supported by this plugin.
 - The invisible dummy stacks are removed from the [tooltip](http://www.chartjs.org/docs/latest/configuration/tooltip.html#filter-callback) 
 and [legend](http://www.chartjs.org/docs/latest/configuration/legend.html#legend-label-configuration) by default using the `filter` method. 
 If you are providing your own filter method, using a custom tooltip or legend of your own then you will have to manually hide them because it will overwrite this plugins.
