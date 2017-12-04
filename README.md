@@ -70,7 +70,9 @@ This dataset will give us the look in the image above.
 The plugin options can be changed at 3 different levels:
 
 globally: Chart.defaults.global.plugins.waterfall.*
+
 per chart: options.plugins.waterfall.*
+
 per dataset: dataset.waterfall.* (not all options)
 
 The default chart options are:
