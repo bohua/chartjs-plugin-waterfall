@@ -24,14 +24,12 @@ const filterDummyStacks = (legendItem, chartData) => {
 };
 
 const initializeDatasets = (chart) => {
-  chart.data.datasets.forEach((dataset, i) => {
+  chart.data.datasets.forEach((dataset) => {
     dataset.waterfall = merge({}, {
       stepLines: {},
     }, dataset.waterfall);
 
-    // Each dataset must have a unique label so we set the dummy stacks to have dummy labels
     if (dataset.waterfall.dummyStack) {
-      dataset.label = `dummyStack_${i}`;
       dataset.backgroundColor = 'rgba(0, 0, 0, 0)';
     }
   });
