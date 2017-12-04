@@ -369,6 +369,20 @@ var filterDummyStacks = function filterDummyStacks(legendItem, chartData) {
   return !currentDataset.waterfall.dummyStack;
 };
 
+var initializeDatasets = function initializeDatasets(chart) {
+  chart.data.datasets.forEach(function (dataset, i) {
+    dataset.waterfall = merge({}, {
+      stepLines: {}
+    }, dataset.waterfall);
+
+    // Each dataset must have a unique label so we set the dummy stacks to have dummy labels
+    if (dataset.waterfall.dummyStack) {
+      dataset.label = 'dummyStack_' + i;
+      dataset.backgroundColor = 'rgba(0, 0, 0, 0)';
+    }
+  });
+};
+
 var waterFallPlugin = {
   beforeInit: function beforeInit(chart) {
     status[chart.id] = {
@@ -376,6 +390,8 @@ var waterFallPlugin = {
     };
   },
   afterInit: function afterInit(chart) {
+    initializeDatasets(chart);
+
     chart.options.plugins = merge({}, defaultOptions, chart.options.plugins);
     chart.options.tooltips.filter = filterDummyStacks;
     chart.options.legend.labels.filter = filterDummyStacks;
@@ -386,21 +402,11 @@ var waterFallPlugin = {
 
       drawStepLines(chart);
     }, chart.options.animation.duration);
-
-    chart.data.datasets.forEach(function (dataset, i) {
-      dataset.waterfall = merge({}, {
-        stepLines: {}
-      }, dataset.waterfall);
-
-      // Each dataset must have a unique label so we set the dummy stacks to have dummy labels
-      if (dataset.waterfall.dummyStack) {
-        dataset.label = 'dummyStack_' + i;
-        dataset.backgroundColor = 'rgba(0, 0, 0, 0)';
-      }
-    });
   },
   afterDraw: function afterDraw(chart) {
     var options = chart.options.plugins.waterFallPlugin;
+
+    initializeDatasets(chart);
 
     if (options.stepLines.enabled && status[chart.id].readyToDrawStepLines) {
       drawStepLines(chart);
