@@ -7,7 +7,7 @@
   "main": "lib/chartjs-plugin-waterfall.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MartinDawson/chartjs-plugin-waterfall"
+    "url": "https://github.com/everestate/chartjs-plugin-waterfall"
   },
   "files": [
     "dist",
