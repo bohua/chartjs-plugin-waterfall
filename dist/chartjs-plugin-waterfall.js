@@ -311,11 +311,7 @@ var drawStepLines = (function (chart) {
     };
   };
 
-  var stacksYPosAndBaseAreEqual = function stacksYPosAndBaseAreEqual(currentDatapointValues, nextDatapointValues) {
-    return currentDatapointValues.stackTopYPos === nextDatapointValues.stackTopYPos && currentDatapointValues.stackBase === nextDatapointValues.stackBase;
-  };
-
-  var _loop = function _loop(i) {
+  for (var i = 0; i < newDatasets.length; i += 1) {
     var currentDataSet = newDatasets[i];
 
     if (i !== newDatasets.length - 1) {
@@ -323,28 +319,10 @@ var drawStepLines = (function (chart) {
       var currentDatapointValues = getDatapointsValues(currentDataSet);
       var nextDatapointValues = getDatapointsValues(nextDataSet);
 
-      if (options.diagonalStepLines || stacksYPosAndBaseAreEqual(currentDatapointValues, nextDatapointValues)) {
+      if (currentDatapointValues.stackTopYPos === nextDatapointValues.stackTopYPos || currentDatapointValues.stackBase === nextDatapointValues.stackTopYPos || currentDatapointValues.stackTopYPos === nextDatapointValues.stackBase) {
         drawOnCanvas(context, options, currentDatapointValues, nextDatapointValues);
       }
-
-      // Custom step lines that can go from each sub-stack to another sub-stack
-      if (Array.isArray(options.diagonalStepLines)) {
-        options.diagonalStepLines.forEach(function (stepLinesIndexArray) {
-          var firstCoordinateIndex = stepLinesIndexArray[0];
-          var secondCoordinateIndex = stepLinesIndexArray[1];
-          var currentDiagonalDatapointValues = currentDataSet[firstCoordinateIndex];
-          var nextDiagonalDatapointValues = nextDataSet[secondCoordinateIndex];
-
-          if (currentDiagonalDatapointValues && nextDiagonalDatapointValues) {
-            drawOnCanvas(context, options, currentDiagonalDatapointValues, nextDiagonalDatapointValues);
-          }
-        });
-      }
     }
-  };
-
-  for (var i = 0; i < newDatasets.length; i += 1) {
-    _loop(i);
   }
 });
 
@@ -355,8 +333,7 @@ var defaultOptions = {
       startColorStop: 0,
       endColorStop: 0.6,
       startColor: 'rgba(0, 0, 0, 0.55)', // opaque
-      endColor: 'rgba(0, 0, 0, 0)', // transparent
-      diagonalStepLines: true
+      endColor: 'rgba(0, 0, 0, 0)' // transparent
     }
   }
 };
@@ -397,8 +374,11 @@ var waterFallPlugin = {
     // Can't override onComplete function because it gets overwridden if user using React
     setTimeout(function () {
       status[chart.id].readyToDrawStepLines = true;
+      var options = chart.options.plugins.waterFallPlugin;
 
-      drawStepLines(chart);
+      if (options.stepLines.enabled) {
+        drawStepLines(chart);
+      }
     }, chart.options.animation.duration);
   },
   afterDraw: function afterDraw(chart) {
