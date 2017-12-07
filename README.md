@@ -101,19 +101,6 @@ Global/Chart options:
 
 `stepLines.enabled`: (boolean) If true then it shows the step-lines going from one bar to another.
 
-`stepLines.diagonalStepLines`: (bool | Array[Array[numbers]])) If true then it shows the step-lines going from one bar to another even if the bars don't line up on the y axis.
-You can also specify and array of an array of numbers, each inner array represents each bar on your chart and the number represents the stack index to draw the line from and to.
-If you specify an index in the inner array that is out of bounds of the stacks index then the step line is not rendered and an error is NOT thrown.
-
-E.g:
-
-```js
-diagonalStepLines: [[0, 1], [1, 3]]
-```
-
-The above code will draw a step line from the first bar's zero stack to the second bars first stack and another line from the second bars first stack to the
-second bars third stack.
-
 Global/Chart/Dataset options:
 
 `stepLines.startColorStop`: (number) Used as the offset value in the first [`addColorStop`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop) method call.
@@ -123,6 +110,8 @@ Global/Chart/Dataset options:
 `stepLines.endColorStop`: (number) Used as the offset value in the second [`addColorStop`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop) method call.
 
 `stepLines.endColor`: (string) Used as the color value in the second [`addColorStop`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop) method call.
+
+For lines going from bar to bar that you need maximum customization over, see [chartjs-plugin-custom-lines](https://github.com/everestate/chartjs-plugin-custom-lines).
 
 ### Caveats
 - Multiple values in `data` currently are not supported by this plugin.

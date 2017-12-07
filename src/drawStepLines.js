@@ -127,10 +127,6 @@ export default (chart) => {
     };
   };
 
-  const stacksYPosAndBaseAreEqual = (currentDatapointValues, nextDatapointValues) =>
-    (currentDatapointValues.stackTopYPos === nextDatapointValues.stackTopYPos &&
-    currentDatapointValues.stackBase === nextDatapointValues.stackBase);
-
   for (let i = 0; i < newDatasets.length; i += 1) {
     const currentDataSet = newDatasets[i];
 
@@ -139,22 +135,10 @@ export default (chart) => {
       const currentDatapointValues = getDatapointsValues(currentDataSet);
       const nextDatapointValues = getDatapointsValues(nextDataSet);
 
-      if (options.diagonalStepLines || stacksYPosAndBaseAreEqual(currentDatapointValues, nextDatapointValues)) {
+      if (currentDatapointValues.stackTopYPos === nextDatapointValues.stackTopYPos ||
+        currentDatapointValues.stackBase === nextDatapointValues.stackTopYPos ||
+        currentDatapointValues.stackTopYPos === nextDatapointValues.stackBase) {
         drawOnCanvas(context, options, currentDatapointValues, nextDatapointValues);
-      }
-
-      // Custom step lines that can go from each sub-stack to another sub-stack
-      if (Array.isArray(options.diagonalStepLines)) {
-        options.diagonalStepLines.forEach((stepLinesIndexArray) => {
-          const firstCoordinateIndex = stepLinesIndexArray[0];
-          const secondCoordinateIndex = stepLinesIndexArray[1];
-          const currentDiagonalDatapointValues = currentDataSet[firstCoordinateIndex];
-          const nextDiagonalDatapointValues = nextDataSet[secondCoordinateIndex];
-
-          if (currentDiagonalDatapointValues && nextDiagonalDatapointValues) {
-            drawOnCanvas(context, options, currentDiagonalDatapointValues, nextDiagonalDatapointValues);
-          }
-        });
       }
     }
   }

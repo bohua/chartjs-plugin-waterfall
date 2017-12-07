@@ -10,7 +10,6 @@ const defaultOptions = {
       endColorStop: 0.6,
       startColor: 'rgba(0, 0, 0, 0.55)', // opaque
       endColor: 'rgba(0, 0, 0, 0)', // transparent
-      diagonalStepLines: true,
     },
   },
 };
@@ -51,8 +50,11 @@ const waterFallPlugin = {
     // Can't override onComplete function because it gets overwridden if user using React
     setTimeout(() => {
       status[chart.id].readyToDrawStepLines = true;
+      const options = chart.options.plugins.waterFallPlugin;
 
-      drawStepLines(chart);
+      if (options.stepLines.enabled) {
+        drawStepLines(chart);
+      }
     }, chart.options.animation.duration);
   },
   afterDraw: (chart) => {

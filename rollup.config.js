@@ -5,7 +5,7 @@ import merge from 'lodash.merge';
 
 const common = {
   input: 'src/index.js',
-  name: 'chartjsWPluginWaterfall',
+  name: 'chartjsPluginWaterfall',
   sourcemap: true,
   external: ['lodash.merge', 'lodash.groupby'],
   globals: {

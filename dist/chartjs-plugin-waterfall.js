@@ -1,7 +1,7 @@
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('lodash.merge'), require('lodash.groupby')) :
 	typeof define === 'function' && define.amd ? define(['lodash.merge', 'lodash.groupby'], factory) :
-	(global.chartjsWPluginWaterfall = factory(global._.merge,global._.groupby));
+	(global.chartjsPluginWaterfall = factory(global._.merge,global._.groupby));
 }(this, (function (merge,groupBy) { 'use strict';
 
 merge = merge && merge.hasOwnProperty('default') ? merge['default'] : merge;
