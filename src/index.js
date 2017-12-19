@@ -50,11 +50,7 @@ const waterFallPlugin = {
     // Can't override onComplete function because it gets overwridden if user using React
     setTimeout(() => {
       status[chart.id].readyToDrawStepLines = true;
-      const options = chart.options.plugins.waterFallPlugin;
-
-      if (options.stepLines.enabled) {
-        drawStepLines(chart);
-      }
+      chart.draw();
     }, chart.options.animation.duration);
   },
   afterDraw: (chart) => {
