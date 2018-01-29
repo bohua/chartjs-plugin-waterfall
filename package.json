@@ -2,7 +2,7 @@
   "name": "chartjs-plugin-waterfall",
   "homepage": "http://www.chartjs.org",
   "description": "Chart.js plugin for easy waterfall charts",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "license": "MIT",
   "main": "lib/chartjs-plugin-waterfall.js",
   "repository": {

@@ -85,31 +85,33 @@ export default (chart) => {
   };
 
   Object.keys(stackedDatasets).forEach((key) => {
-    const currentStackedDataset = stackedDatasets[key];
+    const currentStackedDataset = stackedDatasets[key].filter(x => x.data[0] !== 0);
 
-    const nonDummyStacks = currentStackedDataset.filter(dataset => !dataset.waterfall.dummyStack);
-    const bases = nonDummyStacks.map(dataset => getModel(dataset).base);
-    const lowestBase = Math.max(...bases);
+    if (!currentStackedDataset.every(x => x.waterfall.dummyStack)) {
+      const nonDummyStacks = currentStackedDataset.filter(dataset => !dataset.waterfall.dummyStack);
+      const bases = nonDummyStacks.map(dataset => getModel(dataset).base);
+      const lowestBase = Math.max(...bases);
 
-    const dummStackBases = currentStackedDataset.map(dataset => getModel(dataset).base);
-    const lowestDummyStackBase = Math.max(...dummStackBases);
+      const dummStackBases = currentStackedDataset.map(dataset => getModel(dataset).base);
+      const lowestDummyStackBase = Math.max(...dummStackBases);
 
-    // Loop through each sub stack
-    const properties = currentStackedDataset.map((dataset) => {
-      const model = getModel(dataset);
+      // Loop through each sub stack
+      const properties = currentStackedDataset.map((dataset) => {
+        const model = getModel(dataset);
 
-      return {
-        stackRightXPos: model.x + (model.width / 2),
-        stackLeftXPos: model.x - (model.width / 2),
-        stackTopYPos: model.y,
-        stackBase: lowestBase,
-        dummyStackBase: lowestDummyStackBase,
-        isPositive: dataset.data[0] > 0,
-        options: dataset.waterfall.stepLines,
-      };
-    });
+        return {
+          stackRightXPos: model.x + (model.width / 2),
+          stackLeftXPos: model.x - (model.width / 2),
+          stackTopYPos: model.y,
+          stackBase: lowestBase,
+          dummyStackBase: lowestDummyStackBase,
+          isPositive: dataset.data[0] > 0,
+          options: dataset.waterfall.stepLines,
+        };
+      });
 
-    newDatasets.push(properties);
+      newDatasets.push(properties);
+    }
   });
 
   // Gets the values for the steplines at the top of the stack
