@@ -263,37 +263,43 @@ var drawStepLines = (function (chart) {
   };
 
   Object.keys(stackedDatasets).forEach(function (key) {
-    var currentStackedDataset = stackedDatasets[key];
-
-    var nonDummyStacks = currentStackedDataset.filter(function (dataset) {
-      return !dataset.waterfall.dummyStack;
-    });
-    var bases = nonDummyStacks.map(function (dataset) {
-      return getModel(dataset).base;
-    });
-    var lowestBase = Math.max.apply(Math, toConsumableArray(bases));
-
-    var dummStackBases = currentStackedDataset.map(function (dataset) {
-      return getModel(dataset).base;
-    });
-    var lowestDummyStackBase = Math.max.apply(Math, toConsumableArray(dummStackBases));
-
-    // Loop through each sub stack
-    var properties = currentStackedDataset.map(function (dataset) {
-      var model = getModel(dataset);
-
-      return {
-        stackRightXPos: model.x + model.width / 2,
-        stackLeftXPos: model.x - model.width / 2,
-        stackTopYPos: model.y,
-        stackBase: lowestBase,
-        dummyStackBase: lowestDummyStackBase,
-        isPositive: dataset.data[0] > 0,
-        options: dataset.waterfall.stepLines
-      };
+    var currentStackedDataset = stackedDatasets[key].filter(function (x) {
+      return x.data[0] !== 0;
     });
 
-    newDatasets.push(properties);
+    if (!currentStackedDataset.every(function (x) {
+      return x.waterfall.dummyStack;
+    })) {
+      var nonDummyStacks = currentStackedDataset.filter(function (dataset) {
+        return !dataset.waterfall.dummyStack;
+      });
+      var bases = nonDummyStacks.map(function (dataset) {
+        return getModel(dataset).base;
+      });
+      var lowestBase = Math.max.apply(Math, toConsumableArray(bases));
+
+      var dummStackBases = currentStackedDataset.map(function (dataset) {
+        return getModel(dataset).base;
+      });
+      var lowestDummyStackBase = Math.max.apply(Math, toConsumableArray(dummStackBases));
+
+      // Loop through each sub stack
+      var properties = currentStackedDataset.map(function (dataset) {
+        var model = getModel(dataset);
+
+        return {
+          stackRightXPos: model.x + model.width / 2,
+          stackLeftXPos: model.x - model.width / 2,
+          stackTopYPos: model.y,
+          stackBase: lowestBase,
+          dummyStackBase: lowestDummyStackBase,
+          isPositive: dataset.data[0] > 0,
+          options: dataset.waterfall.stepLines
+        };
+      });
+
+      newDatasets.push(properties);
+    }
   });
 
   // Gets the values for the steplines at the top of the stack
