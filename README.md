@@ -15,6 +15,8 @@ var chart = new Chart(ctx, {
 });
 ```
 
+Example gist by @EdwinChua: https://gist.github.com/EdwinChua/0a5d66dc561fe7d3866021b18a320585
+
 See the [plugins](http://www.chartjs.org/docs/latest/developers/plugins.html) documentation for more info.
 
 ### How it works
