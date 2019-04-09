@@ -1,4 +1,4 @@
-import groupBy from 'lodash.groupby';
+import groupBy from 'lodash/groupBy';
 
 const DEBUG = false;
 
