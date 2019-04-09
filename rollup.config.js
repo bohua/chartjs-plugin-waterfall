@@ -1,17 +1,12 @@
 import babel from 'rollup-plugin-babel';
 import eslint from 'rollup-plugin-eslint';
 import uglify from 'rollup-plugin-uglify';
-import merge from 'lodash.merge';
+import merge from 'lodash/merge';
 
 const common = {
   input: 'src/index.js',
   name: 'chartjsPluginWaterfall',
   sourcemap: true,
-  external: ['lodash.merge', 'lodash.groupby'],
-  globals: {
-    'lodash.merge': '_.merge',
-    'lodash.groupby': '_.groupby',
-  },
 };
 
 const babelOptions = {
